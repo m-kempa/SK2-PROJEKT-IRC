@@ -9,12 +9,12 @@ import javafx.stage.Stage;
 import java.io.IOException;
 
 
-//Klasa główna inicująca okno logowania do systemu IPC
+//Klasa główna inicująca okno logowania do systemu IRC
 public class Main extends Application {
 
 
 
-    public static boolean END = true;
+    public static boolean END = false;
 
     //Metoda która rozpoczyna api (okno startowe)
     @Override
@@ -29,7 +29,7 @@ public class Main extends Application {
     //Metoda główna projektu, w niej w przyszłości będzie zamykane połączenie z serwerem
     public static void main(String[] args) throws IOException {
         launch(args);
-        END = false;
+        END = true;
 
     }
 }
