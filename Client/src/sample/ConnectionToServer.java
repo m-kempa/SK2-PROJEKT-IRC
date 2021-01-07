@@ -20,7 +20,6 @@ public class ConnectionToServer {
 
 
     //Metoda próbuje nawiązać połączenie z serwerem i w przypadku nieudanej próby, wyświetla odpowiedni komunikat
-    //Moteda stara się uzyskać połączenie z serwerem
     public boolean serverConnection(String ip_host, int port, ApiWidnowController window) throws IOException {
 
         ConnectionToServer.port = port;
