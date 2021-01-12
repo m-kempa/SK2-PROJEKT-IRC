@@ -46,12 +46,7 @@ public class Controller {
                 Integer.parseInt(port.getText());
                 //Pole nick jest wymagane, jeśli zostanie pominięte próba połączenia z serwerem się nie odbędzie i zostanie wyświetlony ERROR
                 if(!nick.getText().isEmpty()) {
-                    //
                     CONNECTION_SUCCESS = server.serverConnection(ip.getText(), Integer.parseInt(port.getText()), window );
-                }
-                else{
-                    window.ErrorWindow( "ERROR","Brak wypisanego pola Nick",
-                            "Pole Nick musi być wypełnione!", Alert.AlertType.ERROR);
                 }
             }
             catch (Exception e)
@@ -61,12 +56,15 @@ public class Controller {
             }
 
         }
-        //jeżeli połączenie zostało nawiązane
+        //jeżeli połączenie się powiodło i login przeszedł test unikalności przechodzimy do głównej storny chatu
         if(CONNECTION_SUCCESS)
         {
-
-                window.switchToChatWindow(actionEvent, "GroupChat.fxml", 1032, 736);
-
+            if(server.IsNickUnique(nick.getText(), window))
+            {
+                window.switchToChatWindow(actionEvent, "GroupChat.fxml", 932, 636);
+            }
+            else
+                CONNECTION_SUCCESS = false;
         }
 
     }
