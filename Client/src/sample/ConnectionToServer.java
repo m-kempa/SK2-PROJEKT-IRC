@@ -34,15 +34,18 @@ public class ConnectionToServer {
         //Blok obsługi błędów połączenia
         try {
             userSocket.connect(socketAddress, connection_limit);
-        } catch (SocketTimeoutException ex) {
+        }
+        catch (SocketTimeoutException ex) {
             window.ErrorWindow("ERROR", "Zbyt długi czas oczekiwania", "Sprawdź poprawność operacji łączenia z serwerem", Alert.AlertType.ERROR);
             userSocket.close();
             return false;
-        } catch (IOException e) {
+        }
+        catch (IOException e) {
             window.ErrorWindow("ERROR", "Połączenie z serwerem nie powiodło się", "Sprawdź poprawność operacji łączenia z serwerem", Alert.AlertType.ERROR);
             userSocket.close();
             return false;
-        } catch (Exception e) {
+        }
+        catch (Exception e) {
             window.ErrorWindow("ERROR", "Połączenie z serwerem nie powiodło się", "Sprawdź poprawność operacji łączenia z serwerem", Alert.AlertType.ERROR);
             userSocket.close();
             return false;
@@ -94,6 +97,127 @@ public class ConnectionToServer {
         }
     }
 
+    //Klient za pomocą tej metody wysyła informację o zmianie pokoju na inny
+    public void roomChange(String roomNumber) throws IOException {
+        PrintWriter writer = new PrintWriter(userSocket.getOutputStream(), true);
+        writer.println(roomNumber);
+    }
+
+    //Metoda wysyłająca wiadomość do serwera od użytkownika piszącego wiadomość
+    public void sendMessage(String message) throws IOException {
+
+        PrintWriter writer = new PrintWriter(userSocket.getOutputStream(), true);
+        String length = MessageZeroAdd(message);
+        writer.println("mSend" + length + message);
+    }
+
+
+
+    //Metoda odbiera wiadomości od serwera (które wysłali inni użytkownicy)
+    public String messageGetFromServer() throws IOException {
+
+
+        String serverMessage = "XXXXXXXXXXXXXXXXX";
+        String message;
+        String nickLen;
+        String messLen;
+
+        //Opcje Komunikatów od serwera
+        String messageFromOtherUserInRoom = "messU";
+        String userJoinToRoom  = "roomJ";
+        String userLeaveRoom = "roomL";
+
+        try {
+            //zaporzyczone z szblonu z zajęc
+            BufferedReader reader = new BufferedReader(new InputStreamReader(userSocket.getInputStream()));
+            serverMessage = reader.readLine();
+
+
+            //Opcja messU oznacza nową wiadomość od innych użytkoników znajdujących się w pokoju
+            if (messageFromOtherUserInRoom.equals(serverMessage.substring(0,5))) {
+
+                //odrzucamy pierwszy znak z kodem wiadomości
+                serverMessage = serverMessage.substring(5, serverMessage.length());
+
+                //odczytanie dł nicku
+                nickLen = serverMessage.substring(0, 2);
+                nickLen = nickLen.replaceAll("^0*", ""); //zamieniamy nieznaczących zer na puste pola
+
+                //odczytanie długości wiadomości
+                messLen = serverMessage.substring(Integer.parseInt(nickLen) + 2, Integer.parseInt(nickLen) + 5);
+                messLen = messLen.replaceAll("^0*", "");
+
+                message = serverMessage.substring(Integer.parseInt(nickLen) + 5, serverMessage.length());
+
+                //Czytamy tak długo aż zapisze całą wiadomość o wcześniej pobranej długości
+                while (message.length() < Integer.parseInt(messLen)) {
+                    message = message + reader.readLine();
+                }
+                serverMessage = messageFromOtherUserInRoom + serverMessage.substring(0, 5 + Integer.parseInt(nickLen)) + message;
+
+            }
+
+            //Opcja roomJ oznacza dołączenie nowego użytkownika do pokoju
+            else if (userJoinToRoom.equals(serverMessage.substring(0,5))) {
+                serverMessage = serverMessage.substring(5, serverMessage.length());
+                nickLen = serverMessage.substring(0, 2);
+                nickLen = nickLen.replaceAll("^0*", "");
+                message = serverMessage.substring(2, serverMessage.length());
+
+                //Czytamy tak długo aż zapisze całą wiadomość o wcześniej pobranej długości
+                while (message.length() < Integer.parseInt(nickLen)) {
+                    message = message + reader.readLine();
+                }
+                serverMessage = userJoinToRoom + serverMessage.substring(0, 2) + message;
+
+
+            }
+
+            //Opcja roomL oznacza opuszczenie pokoju przez użytkownika
+            else if (userLeaveRoom.equals(serverMessage.substring(0,5))) {
+                serverMessage = serverMessage.substring(5, serverMessage.length());
+                nickLen = serverMessage.substring(0, 2);
+                nickLen = nickLen.replaceAll("^0*", "");
+                message = serverMessage.substring(2, serverMessage.length());
+
+                //Czytamy tak długo aż zapisze całą wiadomość o wcześniej pobranej długości
+                while (message.length() < Integer.parseInt(nickLen)) {
+                    message = message + reader.readLine();
+                }
+                serverMessage = userLeaveRoom + serverMessage.substring(0, 2) + message;
+            }
+        } catch (Exception e) {
+            ;
+        }
+
+
+        return serverMessage;
+    }
+
+
+    //Ta metoda zamyka połączenie z serwerem
+    public void connectionClosed() throws IOException {
+        try {
+            PrintWriter writer = new PrintWriter(userSocket.getOutputStream(), true);
+            writer.println("close");
+            userSocket.close();
+        } catch (Exception e) {
+            ;
+        }
+    }
+
+    // metoda służąca uzupełnieniu długości Wiadomości
+    // dozwolona długość wiadomości od 1-999
+    private String MessageZeroAdd(String login) {
+        String length;
+        if (login.length() < 10)
+            length = "00" + Integer.toString(login.length());
+        else if (login.length() < 100)
+            length = "0" + Integer.toString(login.length());
+        else
+            length = Integer.toString(login.length());
+        return length;
+    }
 
     // metoda służąca uzupełnieniu długości nicku zerem jeżeli jego długość jest mnijsza do 10
     private String NickZeroAdd(String login) {
@@ -104,11 +228,6 @@ public class ConnectionToServer {
             length = Integer.toString(login.length());
         return length;
     }
-
-
-
-
-
 
 
 }
