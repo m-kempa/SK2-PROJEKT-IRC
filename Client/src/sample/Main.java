@@ -13,16 +13,16 @@ import java.io.IOException;
 public class Main extends Application {
 
 
-
+    private static ConnectionToServer serwer = new ConnectionToServer();
     public static boolean END = false;
 
     //Metoda która rozpoczyna api (okno startowe)
     @Override
     public void start(Stage primaryStage) throws Exception{
-        Parent root = FXMLLoader.load(getClass().getResource("sample.fxml"));
+        Parent root = FXMLLoader.load(getClass().getResource("LoginPanel.fxml"));
         primaryStage.setTitle("IRC Panel Logowania");
-        primaryStage.setResizable(false);
         primaryStage.setScene(new Scene(root, 460, 296));
+        primaryStage.setResizable(false);
         primaryStage.show();
     }
 
@@ -31,5 +31,7 @@ public class Main extends Application {
         launch(args);
         END = true;
 
+        //Wysłanie do serwera wiadomości o wyłączeniu aplikacji przez klienta
+        serwer.connectionClosed();
     }
 }
