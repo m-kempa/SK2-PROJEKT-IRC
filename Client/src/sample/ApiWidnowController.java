@@ -21,7 +21,7 @@ public class ApiWidnowController {
         Parent log_root = FXMLLoader.load(getClass().getResource(path));
         Scene scene = new Scene(log_root, width, height);
         Stage GroupChat = (Stage) ((Node) actionEvent.getSource()).getScene().getWindow();
-        GroupChat.setTitle("Komunikator typu IRC");
+        GroupChat.setTitle("IRC Communicator");
         GroupChat.setResizable(false);
         GroupChat.setScene(scene);
 
