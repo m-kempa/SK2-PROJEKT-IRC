@@ -1,6 +1,7 @@
 package sample;
 
 
+import javafx.application.Platform;
 import javafx.scene.control.TextField;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontPosture;
@@ -35,7 +36,7 @@ public class GroupChatController {
     @FXML
     private Button secondStudy;
     @FXML
-    private Button thridWork;
+    private Button thirdWork;
     @FXML
     private Button fourth;
     @FXML
@@ -52,6 +53,36 @@ public class GroupChatController {
     private int chatRoomNumber = 0;
 
 
+
+    //Metoda wysyłająca do serwera wiadomość o stworzeniu nowego pokoju
+    private void sendNewRoomToServer(String chat_number, String room_name) {
+        messageDisplay.clear();
+        messageWriting.clear();
+        chatRoomNumber = Integer.parseInt(chat_number);
+        String length = RoomZeroAdd(room_name);
+        if(chatRoomNumber == 4 || chatRoomNumber == 5){
+            //tworzenie nowego wątku w celu wpółbierznośći w słaniu zapytań o nadanie nazwy wolnemu pokojowi
+            Thread NewRoom = new Thread(() -> {
+                try {
+                    serwer.roomAdd("aRoom" + length + room_name );
+                } catch (IOException e) {
+                    ;
+                }
+            });
+            NewRoom.start();
+        }
+    }
+
+    // metoda służąca uzupełnieniu długości nicku zerem jeżeli jego długość jest mnijsza do 10
+    private String RoomZeroAdd(String login) {
+        String length;
+        if (login.length() < 10)
+            length = "0" + Integer.toString(login.length());
+        else
+            length = Integer.toString(login.length());
+        return length;
+    }
+
     //Metoda powoduje wysłanie wiadomości przez użytkonika po wciśnięciu przycisku ENTER
     public void sendMessageWhenEnter(ActionEvent actionEvent) throws IOException{
 
@@ -59,7 +90,7 @@ public class GroupChatController {
         if(!messageWriting.getText().isEmpty()) {
 
             //tworzenie nowego wątku, aby współbierznie wysyłać wiadomości
-            Thread thread = new Thread(() -> {
+            Thread Message = new Thread(() -> {
                 try {
                     serwer.sendMessage(messageWriting.getText());
                     //System.out.println(messageWriting.getText());
@@ -68,7 +99,7 @@ public class GroupChatController {
                     ;
                 }
             });
-            thread.start();
+            Message.start();
         }
     }
 
@@ -77,40 +108,47 @@ public class GroupChatController {
         messageDisplay.clear();
         messageWriting.clear();
         chatRoomNumber = Integer.parseInt(chat_number);
-
+        //if (!chat_number.equals("0"))
+            //messageWriting.setDisable(false);
 
         //tworzenie nowego wątku w celu wpółbierznośći w słaniu zapytań o zmianę pokoju
-        Thread thread = new Thread(() -> {
+        Thread RoomChange = new Thread(() -> {
             try {
                 serwer.roomChange("cRoom" + chat_number);
             } catch (IOException e) {
                 ;
             }
         });
-        thread.start();
+        RoomChange.start();
     }
 
     //Metoda inicializująca dla javaFX
     public void initialize(){
 
+
+
         //Nowy wątek w celu współbierzności, który działa aż do zakończenia programu
-        Thread thread = new Thread(() -> {
+        Thread initialize = new Thread(() -> {
             String nickLen;
             String messLen;
             String message;
+            String roomNumber;
+            String NewRoomLen;
 
             //Opcje Komunikatów od serwera
             String messageFromOtherUserInRoom = "messU";
             String userJoinToRoom  = "roomJ";
             String userLeaveRoom = "roomL";
+            String userAddRoom = "roomA";
 
             //messageWriting.setDisable(true);
-            messageDisplay.setWrapText(true);
+            //messageDisplay.setWrapText(true);
+            messageDisplay.clear();
+            messageWriting.clear();
 
-            messageDisplay.setText("\t\t\t\t\t\tWitamy w komunikatorze IRC\n" +
-            "\t\t\t\t\t\t\t\tZasady:\n" +
-            "\t\t\t\t\t\tProszę nie pisac polskich znakow\n" +
-            "\t\t\t\t\t\tTODO dodanie tworzenia nowych pokoji na pustych slotach\n");
+            messageDisplay.setText("\t\t\t\t\t\tWelcome to IRC Communicator\n" +
+            "\t\t\t\t\t\t\t\tRules:\n" +
+            "\t\t\t\t\t\tPlease do not use Polish words!\n\n\n" );
             while (!END) {
                 try {
 
@@ -129,24 +167,58 @@ public class GroupChatController {
                         messageDisplay.appendText(message.substring(2, 2 + Integer.parseInt(nickLen)) + " : \n");
                         messageDisplay.appendText("\t\t" + message.substring(Integer.parseInt(nickLen) + 5, Integer.parseInt(nickLen) + 5 + Integer.parseInt(messLen)) + "\n");
                     }
+                    else if(userAddRoom.equals(message.substring(0,5))){
+                        message = message.substring(5, message.length());
+                        roomNumber = message.substring(0, 1);
+                        NewRoomLen = message.substring(1, 3);
+                        NewRoomLen = NewRoomLen.replaceAll("^0*", "");
+                        String nameRoom = message.substring(3, 3 + Integer.parseInt(NewRoomLen));
+                        if(Integer.parseInt(roomNumber) == 4){
+                            isFourthRoomAdded = true;
+                            messageDisplay.appendText("\t\t\t\t\t\t\t\t" + "Room " + nameRoom + " has been created\n");
+
+                            //Modyfikacja nazwy przycisku odpalonym na innym wątku
+                            Platform.runLater(() -> {
+                                fourth.setText(nameRoom);
+                            });
+                            messageWriting.setDisable(false);
+                            roomName.setDisable(true);
+                            newRoomButton.setDisable(true);
+                            roomName.clear();
+
+                        }
+                        else if(Integer.parseInt(roomNumber) == 5){
+                            isFifthRoomAdded = true;
+                            messageDisplay.appendText("\t\t\t\t\t\t\t\t" + "Room: " + nameRoom + " has been created\n");
+
+                            //Modyfikacja nazwy przycisku odpalonym na innym wątku
+                            Platform.runLater(() -> {
+                                fifth.setText(nameRoom);
+                            });
+                            messageWriting.setDisable(false);
+                            roomName.setDisable(true);
+                            newRoomButton.setDisable(true);
+                            roomName.clear();
+                        }
+                    }
                     else if (userJoinToRoom.equals(message.substring(0,5))) {
                         if(chatRoomNumber == 4 && isFourthRoomAdded == false){
-                            messageDisplay.appendText("\t\t\t\t\t\t\t\t" + "Jesteś w pustym pokoju\n");
+                            messageDisplay.appendText("\t\t\t\t\t\t\t" + "You are in empty room slot\n");
                         }
                         else if (chatRoomNumber == 5 && isFifthRoomAdded == false){
-                            messageDisplay.appendText("\t\t\t\t\t\t\t\t" + "Jesteś w pustym pokoju\n");
+                            messageDisplay.appendText("\t\t\t\t\t\t\t" + "You are in empty room slot\n");
                         }
                         else {
                             //Wyświetlenie informacji o dołączeniu nowego użytkownika do pokoju
                             message = message.substring(5, message.length());
-                            messageDisplay.appendText("\t\t\t\t\t\t\t\t" + message.substring(2, message.length()) + " dołączył do pokoju.\n");
+                            messageDisplay.appendText("\t\t\t\t\t\t\t\t" + message.substring(2, message.length()) + " join to room\n");
                         }
                     }
                     else if (userLeaveRoom.equals(message.substring(0,5))) {
 
                         //Wyświetlenie informacji o opuszczeniu pokoju przez użytkownika
                         message = message.substring(5, message.length());
-                        messageDisplay.appendText("\t\t\t\t\t\t\t\t" + message.substring(2, message.length()) + " opuścił pokój.\n");
+                        messageDisplay.appendText("\t\t\t\t\t\t\t\t" + message.substring(2, message.length()) + " leave room\n");
                     }
                 }
                 catch (IOException e) {
@@ -154,8 +226,8 @@ public class GroupChatController {
                 }
                 catch (NullPointerException nu) {
 
-                    messageDisplay.setText("ERROR! Błąd po stronie serwera. Aplikacja zostanie wyłączona. Proszę uruchomić aplikację ponownie!");
-                    messageDisplay.setFont(Font.font("Verdana", FontWeight.BOLD, 20));
+                    messageDisplay.setText("ERROR! Server error. Application will be turn off. Please run it again!");
+                    messageDisplay.setFont(Font.font("Verdana", FontWeight.BOLD, 15));
                     messageDisplay.setStyle("-fx-text-inner-color: red");
 
                     {
@@ -169,21 +241,21 @@ public class GroupChatController {
                 }
             }
         });
-        thread.start();
+        initialize.start();
     }
 
     //Operacje ustawiania kolorów i wartości głównego ekranu Chatu
     @FXML
     public void waitingRoom(ActionEvent actionEvent) {
-        messageDisplay.clear();
-        messageWriting.clear();
-        messageWriting.setDisable(true);
+        //messageDisplay.clear();
+        //messageWriting.clear();
+        //messageWriting.setDisable(true);
         roomName.setDisable(true);
         newRoomButton.setDisable(true);
         waitRoom.setStyle("-fx-background-color: #f9aa33; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         firstSport.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         secondStudy.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
-        thridWork.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
+        thirdWork.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         fourth.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         fifth.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         if(chatRoomNumber !=0) sendRoomToServer("0");
@@ -192,12 +264,14 @@ public class GroupChatController {
     @FXML
     public void firstSport(ActionEvent actionEvent) {
         if(chatRoomNumber !=1) sendRoomToServer("1");
+        //messageDisplay.clear();
+        //messageWriting.clear();
         roomName.setDisable(true);
         newRoomButton.setDisable(true);
         waitRoom.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         firstSport.setStyle("-fx-background-color: #f9aa33; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         secondStudy.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
-        thridWork.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
+        thirdWork.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         fourth.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         fifth.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
     }
@@ -205,25 +279,29 @@ public class GroupChatController {
     @FXML
     public void secondStudy(ActionEvent actionEvent) {
         if(chatRoomNumber !=2) sendRoomToServer("2");
+        //messageDisplay.clear();
+        //messageWriting.clear();
         roomName.setDisable(true);
         newRoomButton.setDisable(true);
         waitRoom.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         firstSport.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         secondStudy.setStyle("-fx-background-color: #f9aa33; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
-        thridWork.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
+        thirdWork.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         fourth.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         fifth.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
     }
 
     @FXML
-    public void thridWork(ActionEvent actionEvent) {
+    public void thirdWork(ActionEvent actionEvent) {
         if(chatRoomNumber !=3) sendRoomToServer("3");
+        //messageDisplay.clear();
+        //messageWriting.clear();
         roomName.setDisable(true);
         newRoomButton.setDisable(true);
         waitRoom.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         firstSport.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         secondStudy.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
-        thridWork.setStyle("-fx-background-color: #f9aa33; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
+        thirdWork.setStyle("-fx-background-color: #f9aa33; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         fourth.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         fifth.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
     }
@@ -232,13 +310,15 @@ public class GroupChatController {
     public void fourth(ActionEvent actionEvent) {
         if(chatRoomNumber !=4) sendRoomToServer("4");
         if(!isFourthRoomAdded) {
-            messageDisplay.clear();
-            messageWriting.clear();
+            //messageDisplay.clear();
+            //messageWriting.clear();
             messageWriting.setDisable(true);
             roomName.setDisable(false);
             newRoomButton.setDisable(false);
         }
         else {
+            //messageDisplay.clear();
+            //messageWriting.clear();
             messageWriting.setDisable(false);
             roomName.setDisable(true);
             newRoomButton.setDisable(true);
@@ -246,7 +326,7 @@ public class GroupChatController {
         waitRoom.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         firstSport.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         secondStudy.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
-        thridWork.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
+        thirdWork.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         fourth.setStyle("-fx-background-color: #f9aa33; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         fifth.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
     }
@@ -255,37 +335,45 @@ public class GroupChatController {
     public void fifth(ActionEvent actionEvent) {
         if(chatRoomNumber !=5) sendRoomToServer("5");
         if(!isFifthRoomAdded) {
-            messageDisplay.clear();
-            messageWriting.clear();
+            //messageDisplay.clear();
+            //messageWriting.clear();
             messageWriting.setDisable(true);
             roomName.setDisable(false);
             newRoomButton.setDisable(false);
         }
         else {
-            messageWriting.setDisable(false);
+            messageDisplay.clear();
+            //messageWriting.clear();
+            //messageWriting.setDisable(false);
             roomName.setDisable(true);
             newRoomButton.setDisable(true);
         }
         waitRoom.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         firstSport.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         secondStudy.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
-        thridWork.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
+        thirdWork.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         fourth.setStyle("-fx-background-color: #c3c4c4; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
         fifth.setStyle("-fx-background-color: #f9aa33; -fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3;");
     }
 
     @FXML void newroom(ActionEvent actionEvent){
-        if(chatRoomNumber ==4){
-            fourth.setText(roomName.getText());
+        if(chatRoomNumber ==4 && isFourthRoomAdded == false){
+            messageDisplay.clear();
+            messageWriting.clear();
+            //fourth.setText(roomName.getText());
             isFourthRoomAdded = true;
+            sendNewRoomToServer("4", roomName.getText());
             messageWriting.setDisable(false);
             roomName.setDisable(true);
             newRoomButton.setDisable(true);
             roomName.clear();
         }
-        else if(chatRoomNumber == 5){
-            fifth.setText(roomName.getText());
+        else if(chatRoomNumber == 5 && isFifthRoomAdded == false){
+            messageDisplay.clear();
+            messageWriting.clear();
+            //fifth.setText(roomName.getText());
             isFifthRoomAdded = true;
+            sendNewRoomToServer("5", roomName.getText());
             messageWriting.setDisable(false);
             roomName.setDisable(true);
             newRoomButton.setDisable(true);
@@ -293,4 +381,5 @@ public class GroupChatController {
 
         }
     }
+
 }
