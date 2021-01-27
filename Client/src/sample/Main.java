@@ -20,13 +20,13 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception{
         Parent root = FXMLLoader.load(getClass().getResource("LoginPanel.fxml"));
-        primaryStage.setTitle("IRC Panel Logowania");
+        primaryStage.setTitle("IRC Login Panel");
         primaryStage.setScene(new Scene(root, 460, 296));
         primaryStage.setResizable(false);
         primaryStage.show();
     }
 
-    //Metoda główna projektu, w niej w przyszłości będzie zamykane połączenie z serwerem
+    //Metoda główna, zamykanie połączenia z serwerem
     public static void main(String[] args) throws IOException {
         launch(args);
         END = true;
