@@ -66,6 +66,133 @@ string NickZeroAdd(thread_data_t *th_data) {
 }
 
 
+//Funkcja wysyła nowo nadaną nazwe pokoju wraz z id pokoju
+void NewRoomAdded(thread_data_t *th_data) {
+
+    int room;
+    char* lengthReaded = new char[2];
+    memset(lengthReaded, 0, 2);
+    char length[2];
+    string readName = "";
+    int pom,read_result;
+    int numberReaded = 0;
+
+    room = th_data -> user.room;
+
+    //Odczytywanie długości nowej nazwy pokoju
+    //Wiadomość może być zapisana na maksymalnie bajtach
+    while(numberReaded < 2) {
+
+        read_result = read(th_data -> user.descriptor, lengthReaded, 2 - numberReaded);
+        if(read_result == -1) {
+            th_data->errorHandling = true;
+            cout << "ERROR! Error trying to read the message length." << endl;
+            return;
+        }
+        else if(read_result == 0) {
+            th_data->errorHandling = true;
+            cout << "ERROR! User disconnected while trying to read the message length." << endl;
+            return;
+        }
+        readName = readName + lengthReaded;
+        numberReaded = numberReaded + read_result;
+
+        if(numberReaded == 2) break;
+
+        //Czyszczenie
+        delete lengthReaded;
+        lengthReaded = new char[2-numberReaded];
+        memset(lengthReaded, 0, 2-numberReaded);
+    }
+
+    strcpy(length, readName.c_str());
+
+    pom = atoi(length);
+    char* messBuff = new char[pom];
+    memset(messBuff, 0, pom);
+    
+    //Czyszczenie zmiennych
+    numberReaded = 0;
+    readName = "";
+
+    //Odczytywanie nowej nazwy pokoju o wcześniej odczytanej długości
+    while(numberReaded <= pom) {
+        read_result = read(th_data -> user.descriptor, messBuff, pom-numberReaded);
+        if(read_result == -1) {
+            th_data->errorHandling = true;
+            cout << "ERROR! Error trying to read the message." << endl;
+            return;
+        }
+        else if(read_result == 0) {
+            th_data->errorHandling = true;
+            cout << "ERROR! User disconnected while trying to read the message" << endl;
+            return;
+        }
+
+        readName = readName + messBuff;
+        numberReaded = numberReaded + read_result;
+
+        if(numberReaded == pom) break;
+
+        delete messBuff;
+        messBuff = new char[pom-numberReaded];
+        memset(messBuff, 0, pom-numberReaded);
+    }
+
+    delete messBuff;
+
+    string NameLength(length);
+    //Tworzenie łańcucha znaków z odpowiedzią do klientów
+    string answer = "roomA" + to_string(room) + NameLength + readName + "\n";
+    cout<<"Answer to client: "<<answer<<endl;
+    int write_result;
+    char* messageToWrite = new char[answer.size()];
+    int answerLength = answer.size();
+    strcpy(messageToWrite, answer.c_str());
+    char temp[answer.size()];
+    strcpy(temp, answer.c_str());
+    numberReaded = 0;
+
+
+    pthread_mutex_lock(&th_data->rooms_mutex[th_data -> user.room]);
+    int size = th_data->users->size();
+    for(int i=0; i< size; i++) {
+            
+            //Wysyłanie odpowiedzi do wszystkich użytkowników
+            while(numberReaded < answerLength) {
+
+                write_result = write((*th_data->users)[i].descriptor, messageToWrite, answerLength-numberReaded);
+                if(write_result == -1) {
+                    th_data->errorHandling = true;
+                    cout << "ERROR! Error trying to send the message" << endl;
+                    return;
+                }
+                else if(write_result == 0) {
+                    th_data->errorHandling = true;
+                    cout << "ERROR! User disconnected while trying to send the message" << endl;
+                    return;
+                }
+
+                numberReaded = numberReaded + write_result;
+                if(numberReaded == answerLength) break;
+
+                delete messageToWrite;
+                messageToWrite = new char[answerLength-numberReaded];
+                memcpy(messageToWrite, temp+numberReaded, answerLength-numberReaded);
+            }
+        
+        numberReaded = 0;
+        delete messageToWrite;
+        messageToWrite = new char[answerLength];
+        strcpy(messageToWrite, answer.c_str());    
+    }
+
+
+    cout << "Client with the descriptor: " << th_data -> user.descriptor << " add the room on the slot number: " << th_data -> user.room << endl;
+    pthread_mutex_unlock(&th_data->rooms_mutex[th_data -> user.room]);
+}
+
+
 
 //Funkcja obługująca mechanizm wiadomości (pobiera długość wiadomości oraz treść przesłane przez klienta)
 //Po tym przekazuję odczytaną wiadomość do pokoju w którym znajduje się klient
@@ -84,12 +211,12 @@ void ReceiveMessegeAndSendToRoom(thread_data_t *th_data) {
         read_result = read(th_data -> user.descriptor, lengthReaded, 3 - numberReaded);
         if(read_result == -1) {
             th_data->errorHandling = true;
-            cout << "ERROR! Błąd podczas próby odczytu długości wiadomości" << endl;
+            cout << "ERROR! Error trying to read the message length" << endl;
             return;
         }
         else if(read_result == 0) {
             th_data->errorHandling = true;
-            cout << "ERROR! Użytkownik rozłączył się podczas próby odczytu długości wiadomości" << endl;
+            cout << "ERROR! User disconnected while trying to read the message length" << endl;
             return;
         }
         readMessage = readMessage + lengthReaded;
@@ -118,12 +245,12 @@ void ReceiveMessegeAndSendToRoom(thread_data_t *th_data) {
         read_result = read(th_data -> user.descriptor, messBuff, pom-numberReaded);
         if(read_result == -1) {
             th_data->errorHandling = true;
-            cout << "ERROR! Błąd podczas próby odczytu wiadomości." << endl;
+            cout << "ERROR! Error trying to read the message." << endl;
             return;
         }
         else if(read_result == 0) {
             th_data->errorHandling = true;
-            cout << "ERROR! Użytkownik rozłączył się podczas próby odczytu wiadomości" << endl;
+            cout << "ERROR! User disconnected while trying to read the message" << endl;
             return;
         }
 
@@ -163,12 +290,12 @@ void ReceiveMessegeAndSendToRoom(thread_data_t *th_data) {
                 write_result = write((*th_data->users)[i].descriptor, messageToWrite, answerLength-numberReaded);
                 if(write_result == -1) {
                     th_data->errorHandling = true;
-                    cout << "ERROR! Błąd podczas próby wysłania wiadomości" << endl;
+                    cout << "ERROR! Error trying to send the message" << endl;
                     return;
                 }
                 else if(write_result == 0) {
                     th_data->errorHandling = true;
-                    cout << "ERROR! Użytkownik rozłączył się podczas próby wysłania wiadomości" << endl;
+                    cout << "ERROR! User disconnected while trying to send the message" << endl;
                     return;
                 }
 
@@ -187,7 +314,7 @@ void ReceiveMessegeAndSendToRoom(thread_data_t *th_data) {
     }
 
 
-    cout << "Klient, desktyprot nr: " << th_data -> user.descriptor << " wysłał z powodzeniem wiadomośc do pokoju nr: " << th_data -> user.room << endl;
+    cout << "Client, descriptor number: " << th_data -> user.descriptor << " successfully sent a message to room number: " << th_data -> user.room << endl;
     pthread_mutex_unlock(&th_data->rooms_mutex[th_data -> user.room]);
 }
 
@@ -203,7 +330,7 @@ int ClientChangeRoomNumber(thread_data_t *th_data) {
     //Pobieranie numeru pokoju
     while((read_result = read(th_data -> user.descriptor, buf_room, sizeof(buf_room))) == 0) {
         if(read_result == -1) {
-            cout << "ERROR! Podczas odczytywania numeru pokoju wystąpił błąd" << endl;
+            cout << "ERROR! An error occurred while reading the room number" << endl;
             return -1;
         }
     }
@@ -221,7 +348,7 @@ int ClientChangeRoomNumber(thread_data_t *th_data) {
         }         
     }
     pthread_mutex_unlock(th_data->users_mutex);
-    cout << "Użytkownik o deskryptorze: " << th_data -> user.descriptor << " zmienił pokój na " << th_data -> user.room << endl;
+    cout << "Client, descriptor number: " << th_data -> user.descriptor << " changed room " << th_data -> user.room << endl;
     return old_room;
 }
 
@@ -258,12 +385,12 @@ void FeedbackToOthersInRoom(thread_data_t *th_data, int room, string mode) {
                 write_result = write((*th_data->users)[i].descriptor, RoomBuf, length-writeInteration);
                 if(write_result == -1) {
                     th_data->errorHandling = true;
-                    cout << "Error! Wiadomość o zmianę pokoju nie została wysłana." << endl;
+                    cout << "Error! The room change message has not been sent." << endl;
                     return;
                 }
                 else if(write_result == 0) {
                     th_data->errorHandling = true;
-                    cout << "Error! Klient rozłączył się podczas wysyłania wiadomości o zmianie pokoju." << endl;
+                    cout << "Error! Client hung up while sending room change message." << endl;
                     return;
                 }
 
@@ -303,11 +430,11 @@ void *ThreadBehavior(void *t_data){
         character = read(th_data -> user.descriptor, mode, sizeof(mode)); //szczytanie operacji do wykonania
 
         if(character == -1) {
-            cout << "Błąd przy odczytywaniu - konczenie watku" << endl;
+            cout << "Reading error - thread ending" << endl;
             break;
         }
         else if (character > 0) {
-            cout<<"opcja: "<<mode<<endl;
+            cout<<"option: "<<mode<<endl;
             //------------ OPCJA login wszystkie operacje dotyczące logowania klienta-----
             if(strcmp( mode, "login") == 0) { 
                 
@@ -340,11 +467,11 @@ void *ThreadBehavior(void *t_data){
                 while(number < 2) {
                     read_result = read(th_data -> user.descriptor, actualLength, 2 - number);
                     if(read_result == -1) {
-                        cout << "EROR! Nie udało się odczytać długości nicku" << endl;
+                        cout << "EROR! Could not read nick length" << endl;
                         ReadError = true;
                     }
                     else if(read_result == 0) {
-                        cout << "ERROR! Klient rozłączył się, podczas odczytywania długości nicku" << endl;
+                        cout << "ERROR! The client disconnected while reading the nickname length" << endl;
                         ReadError = true;
                     }
                     number += read_result;
@@ -368,11 +495,11 @@ void *ThreadBehavior(void *t_data){
                 while(number < pom) {
                     read_result = read(th_data -> user.descriptor, name, pom-number);
                     if(read_result == -1) {
-                        cout << "ERROR! Błąd przy odczytywaniu nicku" << endl;
+                        cout << "ERROR! Error reading nickname" << endl;
                         ReadError =  true;
                     }
                     else if(read_result == 0) {
-                        cout << "ERROR! Klient rozłączył się, podczas odczytywania nicku"<< endl;
+                        cout << "ERROR! The client disconnected while reading the nickname"<< endl;
                         ReadError =  true;
                     }
                     number += read_result;
@@ -395,7 +522,7 @@ void *ThreadBehavior(void *t_data){
                 //-------Sprawdzanie unikalności nicku klienta
                 for(int i=0; i<size; i++) {
                 if(!(*th_data->users)[i].nick.compare(nick)) {
-                    cout << "W wektorze użytkowników istnieje juz ktos o podanym nicku" << endl;
+                    cout << "There is already someone in the user vector with the given nickname" << endl;
                     SameLoginExist =  true;
                     pthread_mutex_unlock(th_data->users_mutex);
                     }
@@ -408,7 +535,7 @@ void *ThreadBehavior(void *t_data){
 
                 //------Sprawdzamy czy zadane wymagania zostały spełnione i wysyłamy odpowiedni feedback do klienta
                 if(SameLoginExist == false && ReadError == false && MaxClients == false) {
-                    cout << "Dodano nick: " << nick << " dla klienta o deskryptorze " << th_data -> user.descriptor << endl;
+                    cout << "Add nick: " << nick << " for client with descriptor: " << th_data -> user.descriptor << endl;
                     th_data -> user.nick = nick;
                     th_data -> user.room = 0; //nadajemy numer poczekalni (respown)
                     (*th_data->users)[user_index].nick = nick; //ustawienie nicku danemu klientowi
@@ -455,6 +582,16 @@ void *ThreadBehavior(void *t_data){
 
             }
 
+            //--------OPCJA aRoom Wysłanie wiadomości do innych klientów odnoście stworzenia nowego pokoju na wolnym slocie
+            else if(strcmp( mode, "aRoom") == 0){
+        
+                NewRoomAdded(th_data);
+                if(th_data->errorHandling == true) {
+                    break; //jeżeli wystąpił jakiś błąd podczas write
+                }
+                ThrowingRubbish(th_data);
+            }
+
             //-------Opcja mSend Przesłanie wiadomości dalej do pokoju w którym znajduje się użytkownik, który napisał wiadomość
             else if(strcmp( mode, "mSend") == 0){
                 ReceiveMessegeAndSendToRoom(th_data);
@@ -475,7 +612,7 @@ void *ThreadBehavior(void *t_data){
     }
 
 
-    cout << "Usunieto klienta o deskryptorze: " << th_data -> user.descriptor << endl;
+    cout << "Delate client with descriptor: " << th_data -> user.descriptor << endl;
     pthread_mutex_lock(th_data->users_mutex);
     pthread_mutex_lock(&th_data->rooms_mutex[th_data -> user.room]);
     //Usunięcie klienta z wektora użytkowników po zakończeniu komunikacji
@@ -529,7 +666,7 @@ void handleConnection( int connection_socket_descriptor, vector<User>* users, pt
         user.descriptor = connection_socket_descriptor;
         user.room = 0;
         users->push_back(user); //dodajemy nowego użytkownika do wektora użytkowników
-        cout<< "Dodano użytkownika. Jego deskryptor to: " << connection_socket_descriptor << endl;
+        cout<< "User added. Its descriptor is: " << connection_socket_descriptor << endl;
         pthread_mutex_unlock(users_mutex);
 
         //Wypełnienie struktury, przekazanie do wątku danych
@@ -545,7 +682,7 @@ void handleConnection( int connection_socket_descriptor, vector<User>* users, pt
         //Stworzenie nowego watku
         create_result = pthread_create(&thread1, NULL, ThreadBehavior, (void*) t_data); 
         if(create_result){
-            cout<< "ERROR! Próba utworzenia wątku dla klienta nie powiodła się. Kod błędu: "<< create_result <<endl;
+            cout<< "ERROR! The thread creation for the client has failed. Error code: "<< create_result <<endl;
             exit(-1);
         }
     }
@@ -567,7 +704,7 @@ int main(int argc, char* argv[]) {
     
     //Obsługa błędu uruchamiania serwera
     if (argc < 3){
-        cout << "ERROR! Drugi argument to port serwera, a trzeci to adres serwera\n";
+        cout << "ERROR! The second argument is the server port and the third argument is the server address\n";
         return 0;
     }
 
@@ -583,7 +720,7 @@ int main(int argc, char* argv[]) {
 
     //Obsługa błędów funkcji socket()
     if(server_socket_descriptor < 0){
-        cout<< "ERROR! Nie udało się utworzyć gniazda do komunikacji sieciowej serwera\n";
+        cout<< "ERROR! Failed to create a socket for server network communication\n";
         return 0;
     }
 
@@ -595,7 +732,7 @@ int main(int argc, char* argv[]) {
 
     //obsługa błędów funkcji bind()
     if(bind_result < 0){
-        cout<<"ERROR! Połączenie danego aresu z gniazdem nie powiodło się\n";
+        cout<<"ERROR! Address connection to socket has failed\n";
         return 0;
     }
 
@@ -604,12 +741,12 @@ int main(int argc, char* argv[]) {
 
     //Obsługa błędów funkcji listen()
     if(listen_result < 0){
-        cout<<"ERROR! Błąd przy próbie ustalenie rozmiaru kolejki\n";
+        cout<<"ERROR! Error trying to figure out queue size\n";
         return 0;
     }
 
 
-    cout<<"\t\t\tSERWER Aplikacji IRC"<<endl;
+    cout<<"\t\t\t\tIRC SERVER"<<endl;
 
     while(1){
         
@@ -618,7 +755,7 @@ int main(int argc, char* argv[]) {
 
         //Obsługa błędów funkcji accept()
         if(connection_socket_descriptor < 0){
-            cout << "ERROR! Coś poszło nie tak przy próbie utworzenia gniazda dla połączenia klient-serwer\n";
+            cout << "ERROR! Something went wrong trying to create a socket for a client-server connection\n";
             return 0;
         }
 
