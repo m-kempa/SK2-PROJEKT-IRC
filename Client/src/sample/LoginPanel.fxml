@@ -6,25 +6,25 @@
 
 <Pane cache="true" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="296.0" prefWidth="460.0" style="-fx-background-color: #4a6572; -fx-border-width: 5; -fx-border-color: #232f34;" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.Controller">
     <children>
-        <Button layoutX="112.0" layoutY="243.0" onAction="#logger"  mnemonicParsing="false" prefHeight="25.0" prefWidth="217.0" text="Dołącz do chatu" textFill="#232f34">
+        <Button layoutX="112.0" layoutY="243.0" onAction="#logger"  mnemonicParsing="false" prefHeight="25.0" prefWidth="217.0" text="Join to Chat" textFill="#232f34">
             <font>
                 <Font name="System Bold" size="15.0" />
             </font>
         </Button>
-        <TextField fx:id="port" layoutX="259.0" layoutY="36.0" promptText="port" />
-        <TextField fx:id="ip" layoutX="259.0" layoutY="95.0" promptText="Host IP" />
-        <TextField fx:id="nick" layoutX="259.0" layoutY="159.0" promptText="Nick" />
-        <Text fill="#f9aa33" layoutX="27.0" layoutY="179.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Podaj swój Nick">
+        <TextField fx:id="port" layoutX="240.0" layoutY="36.0" promptText="port" />
+        <TextField fx:id="ip" layoutX="240.0" layoutY="95.0" promptText="Host IP" />
+        <TextField fx:id="nick" layoutX="240.0" layoutY="159.0" promptText="Nick" />
+        <Text fill="#f9aa33" layoutX="60.0" layoutY="179.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Nick name">
             <font>
                 <Font name="System Bold" size="20.0" />
             </font>
         </Text>
-        <Text fill="#f9aa33" layoutX="25.0" layoutY="115.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Podaj adres IP" wrappingWidth="216.99999898672104">
+        <Text fill="#f9aa33" layoutX="60.0" layoutY="115.0" strokeType="OUTSIDE" strokeWidth="0.0" text="IP adress" wrappingWidth="216.99999898672104">
             <font>
                 <Font name="System Bold" size="20.0" />
             </font>
         </Text>
-        <Text fill="#f9aa33" layoutX="27.0" layoutY="56.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Podaj nr Portu" wrappingWidth="170.24804048240185">
+        <Text fill="#f9aa33" layoutX="60.0" layoutY="56.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Port number" wrappingWidth="170.24804048240185">
             <font>
                 <Font name="System Bold" size="20.0" />
             </font>
