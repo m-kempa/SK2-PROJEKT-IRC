@@ -51,8 +51,8 @@ public class Controller {
             }
             catch (Exception e)
             {
-                window.ErrorWindow( "ERROR","Wpisano zły numer portu",
-                        "Port musi być liczbą!", Alert.AlertType.ERROR);
+                window.ErrorWindow( "ERROR","Bad Port number",
+                        "Port must be a number!", Alert.AlertType.ERROR);
             }
 
         }
