@@ -6,13 +6,13 @@
 
 <Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="636.0" prefWidth="932.0" style="-fx-background-color: #4a6572; -fx-border-width: 5; -fx-border-color: #232f34;" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.GroupChatController">
     <children>
-        <TextField fx:id="roomName" layoutX="395.0" layoutY="115.0" prefHeight="26.0" prefWidth="233.0" promptText="nazwa" disable="true"/>
-        <Button fx:id="newRoomButton" layoutX="636.0" layoutY="113.0" mnemonicParsing="false" onAction="#newroom" prefHeight="26.0" prefWidth="161.0" text="Utwórz Pokój" textFill="#232f34" disable="true">
+        <TextField fx:id="roomName" disable="true" layoutX="395.0" layoutY="115.0" prefHeight="26.0" prefWidth="233.0" promptText="name" />
+        <Button fx:id="newRoomButton" disable="true" layoutX="636.0" layoutY="113.0" mnemonicParsing="false" onAction="#newroom" prefHeight="26.0" prefWidth="161.0" text="Create Room" textFill="#232f34">
             <font>
                 <Font name="System Bold" size="15.0" />
             </font>
         </Button>
-        <Text fx:id="newRoomText" fill="#f9aa33" layoutX="120.0" layoutY="133.0" strokeType="OUTSIDE" strokeWidth="0.0" text="Podaj nazwe nowego pokoju:" wrappingWidth="274.99999898672104">
+        <Text fx:id="newRoomText" fill="#f9aa33" layoutX="146.0" layoutY="133.0" strokeType="OUTSIDE" strokeWidth="0.0" text="    Input new room name:" wrappingWidth="274.99999898672104">
             <font>
                 <Font name="System Bold" size="16.0" />
             </font>
@@ -29,7 +29,7 @@
                 <Font name="Brush Script MT" size="12.0" />
             </font>
         </TextField>
-        <Button fx:id="waitRoom" layoutX="25.0" layoutY="25.0" maxHeight="77.0" maxWidth="140.0" mnemonicParsing="false" onAction="#waitingRoom" prefHeight="67.0" prefWidth="140.0" style="-fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3; -fx-background-color: #f9aa33;" text="Poczekalnia">
+        <Button fx:id="waitRoom" layoutX="25.0" layoutY="25.0" maxHeight="77.0" maxWidth="140.0" mnemonicParsing="false" onAction="#waitingRoom" prefHeight="67.0" prefWidth="140.0" style="-fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3; -fx-background-color: #f9aa33;" text="Waiting room">
             <font>
                 <Font name="System Bold" size="17.0" />
             </font>
@@ -39,14 +39,14 @@
                 <Font name="System Bold" size="17.0" />
             </font>
         </Button>
-        <Button fx:id="secondStudy" layoutX="325.0" layoutY="25.0" maxHeight="77.0" maxWidth="140.0" mnemonicParsing="false" onAction="#secondStudy" prefHeight="67.0" prefWidth="140.0" style="-fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3; -fx-background-color: #c3c4c4;" text="Studia">
+        <Button fx:id="secondStudy" layoutX="325.0" layoutY="25.0" maxHeight="77.0" maxWidth="140.0" mnemonicParsing="false" onAction="#secondStudy" prefHeight="67.0" prefWidth="140.0" style="-fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3; -fx-background-color: #c3c4c4;" text="Study">
             <font>
                 <Font name="System Bold" size="17.0" />
             </font>
         </Button>
-        <Button fx:id="thridWork" layoutX="475.0" layoutY="25.0" maxHeight="77.0" maxWidth="140.0" mnemonicParsing="false" onAction="#thridWork" prefHeight="67.0" prefWidth="140.0" style="-fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3; -fx-background-color: #c3c4c4;" text="Praca">
+        <Button fx:id="thirdWork" layoutX="475.0" layoutY="25.0" maxHeight="77.0" maxWidth="140.0" mnemonicParsing="false" onAction="#thirdWork" prefHeight="67.0" prefWidth="140.0" style="-fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3; -fx-background-color: #c3c4c4;" text="Work">
             <font>
-                <Font name="System Bold Italic" size="17.0" />
+                <Font name="System Bold" size="17.0" />
             </font>
         </Button>
         <Button fx:id="fourth" layoutX="625.0" layoutY="25.0" maxHeight="77.0" maxWidth="140.0" mnemonicParsing="false" onAction="#fourth" prefHeight="67.0" prefWidth="140.0" style="-fx-background-insets: 0,1,4,5,6; -fx-background-radius: 9,8,5,4,3; -fx-background-color: #c3c4c4;" text="+">
