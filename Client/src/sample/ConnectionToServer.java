@@ -36,17 +36,17 @@ public class ConnectionToServer {
             userSocket.connect(socketAddress, connection_limit);
         }
         catch (SocketTimeoutException ex) {
-            window.ErrorWindow("ERROR", "Zbyt długi czas oczekiwania", "Sprawdź poprawność operacji łączenia z serwerem", Alert.AlertType.ERROR);
+            window.ErrorWindow("ERROR", "To long waiting time", "Validate the connection to the server operation", Alert.AlertType.ERROR);
             userSocket.close();
             return false;
         }
         catch (IOException e) {
-            window.ErrorWindow("ERROR", "Połączenie z serwerem nie powiodło się", "Sprawdź poprawność operacji łączenia z serwerem", Alert.AlertType.ERROR);
+            window.ErrorWindow("ERROR", "The connection to the server has failed", "Validate the connection to the server operation", Alert.AlertType.ERROR);
             userSocket.close();
             return false;
         }
         catch (Exception e) {
-            window.ErrorWindow("ERROR", "Połączenie z serwerem nie powiodło się", "Sprawdź poprawność operacji łączenia z serwerem", Alert.AlertType.ERROR);
+            window.ErrorWindow("ERROR", "The connection to the server has failed", "Validate the connection to the server operation", Alert.AlertType.ERROR);
             userSocket.close();
             return false;
         }
@@ -58,7 +58,7 @@ public class ConnectionToServer {
 
         //Nie można zalogować się bez nicku
         if (nick.replaceAll(" ", "").isEmpty()) {
-            window.ErrorWindow( "ERROR","Brak wypisanego pola Nick", "Pole Nick musi być wypełnione!", Alert.AlertType.ERROR);
+            window.ErrorWindow( "ERROR","Nick field is empty", "Nick must be non empty!", Alert.AlertType.ERROR);
             return false;
         }
 
@@ -81,20 +81,27 @@ public class ConnectionToServer {
                 return true;
             }
             else if(serverMessage.equals("1")){
-                window.ErrorWindow("ERROR", "Zbyt duża ilość użytkowników", "Proszę poczekać", Alert.AlertType.ERROR);
+                window.ErrorWindow("ERROR", "Too many users", "Please wait", Alert.AlertType.ERROR);
                 userSocket.close();
                 return false;
             }
             else {
-                window.ErrorWindow("ERROR", "Podany Nick już istnieje", "Proszę wprowadzić inny Nick", Alert.AlertType.ERROR);
+                window.ErrorWindow("ERROR", "This nick name already exist", "Please input different nickname", Alert.AlertType.ERROR);
                 userSocket.close();
                 return false;
             }
         } catch (Exception in) {
-            window.ErrorWindow("ERROR", "Próba wysłania danych do serwera nie powiodła się.", "Spróboj ponownie, może serwer jest niedostępny.", Alert.AlertType.ERROR);
+            window.ErrorWindow("ERROR", "An attempt to send data to the server has failed.", "Try again, maybe the server is unavailable.", Alert.AlertType.ERROR);
             userSocket.close();
             return false;
         }
+    }
+
+    //Klient za pomocą tej metody wysyła informację o nadaniu nazwy nowemu pokojowi
+    public void roomAdd(String roomName) throws IOException {
+        PrintWriter writer = new PrintWriter(userSocket.getOutputStream(), true);
+        writer.println(roomName);
+        //System.out.println(roomName);
     }
 
     //Klient za pomocą tej metody wysyła informację o zmianie pokoju na inny
@@ -121,11 +128,14 @@ public class ConnectionToServer {
         String message;
         String nickLen;
         String messLen;
+        String roomNumber;
+        String NewRoomLen;
 
         //Opcje Komunikatów od serwera
         String messageFromOtherUserInRoom = "messU";
         String userJoinToRoom  = "roomJ";
         String userLeaveRoom = "roomL";
+        String userAddRoom = "roomA";
 
         try {
             //zaporzyczone z szblonu z zajęc
@@ -154,6 +164,23 @@ public class ConnectionToServer {
                     message = message + reader.readLine();
                 }
                 serverMessage = messageFromOtherUserInRoom + serverMessage.substring(0, 5 + Integer.parseInt(nickLen)) + message;
+
+            }
+
+            //Opcja roomA oznacza stworzenie przez użytkownika nowego pokoju na wolnym slocie
+            else if (userAddRoom.equals(serverMessage.substring(0,5))) {
+                serverMessage = serverMessage.substring(5, serverMessage.length());
+                roomNumber = serverMessage.substring(0,1);
+                NewRoomLen = serverMessage.substring(1, 3);
+                NewRoomLen = NewRoomLen.replaceAll("^0*", "");
+                message = serverMessage.substring(3, serverMessage.length());
+
+                //Czytamy tak długo aż zapisze całą wiadomość o wcześniej pobranej długości
+                while (message.length() < Integer.parseInt(NewRoomLen)) {
+                    message = message + reader.readLine();
+                }
+                serverMessage = userAddRoom + serverMessage.substring(0, 3) + message;
+
 
             }
 
