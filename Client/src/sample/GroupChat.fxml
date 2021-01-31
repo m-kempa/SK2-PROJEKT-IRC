@@ -6,13 +6,18 @@
 
 <Pane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="636.0" prefWidth="932.0" style="-fx-background-color: #4a6572; -fx-border-width: 5; -fx-border-color: #232f34;" xmlns="http://javafx.com/javafx/10.0.2-internal" xmlns:fx="http://javafx.com/fxml/1" fx:controller="sample.GroupChatController">
     <children>
-        <TextField fx:id="roomName" disable="true" layoutX="395.0" layoutY="115.0" prefHeight="26.0" prefWidth="233.0" promptText="name" />
-        <Button fx:id="newRoomButton" disable="true" layoutX="636.0" layoutY="113.0" mnemonicParsing="false" onAction="#newroom" prefHeight="26.0" prefWidth="161.0" text="Create Room" textFill="#232f34">
+        <TextField fx:id="roomName" disable="true" layoutX="279.0" layoutY="116.0" prefHeight="26.0" prefWidth="233.0" promptText="name" />
+        <Button fx:id="newRoomButton" disable="true" layoutX="535.0" layoutY="114.0" mnemonicParsing="false" onAction="#newroom" prefHeight="26.0" prefWidth="161.0" text="Create Room" textFill="#232f34">
             <font>
                 <Font name="System Bold" size="15.0" />
             </font>
         </Button>
-        <Text fx:id="newRoomText" fill="#f9aa33" layoutX="146.0" layoutY="133.0" strokeType="OUTSIDE" strokeWidth="0.0" text="    Input new room name:" wrappingWidth="274.99999898672104">
+        <Button fx:id="deleteRoomButton" disable="true" layoutX="713.0" layoutY="114.0" mnemonicParsing="false" onAction="#deleteroom" prefHeight="26.0" prefWidth="161.0" text="Delete Room" textFill="#232f34">
+            <font>
+                <Font name="System Bold" size="15.0" />
+            </font>
+        </Button>
+        <Text fx:id="newRoomText" fill="#f9aa33" layoutX="38.0" layoutY="133.0" strokeType="OUTSIDE" strokeWidth="0.0" text="    Input new room name:" wrappingWidth="274.99999898672104">
             <font>
                 <Font name="System Bold" size="16.0" />
             </font>
