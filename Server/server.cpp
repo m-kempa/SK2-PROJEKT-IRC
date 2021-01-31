@@ -67,7 +67,7 @@ string NickZeroAdd(thread_data_t *th_data) {
 
 
 //Funkcja wysyła nowo nadaną nazwe pokoju wraz z id pokoju
-void NewRoomAdded(thread_data_t *th_data) {
+void AddOrDeleteRoom(thread_data_t *th_data, string mode) {
 
     int room;
     char* lengthReaded = new char[2];
@@ -142,8 +142,14 @@ void NewRoomAdded(thread_data_t *th_data) {
     delete messBuff;
 
     string NameLength(length);
-    //Tworzenie łańcucha znaków z odpowiedzią do klientów
-    string answer = "roomA" + to_string(room) + NameLength + readName + "\n";
+    string answer;
+
+    //Informacja zwrotna o dodaniu pokoju
+    if(mode == "add") answer = "roomA" + to_string(room) + NameLength + readName + "\n";
+    
+    //Informacja zwrotna o usunięciu pokoju
+    else if(mode == "delete") answer = "roomD" + to_string(room) + NameLength + readName + "\n";
+
     cout<<"Answer to client: "<<answer<<endl;
     int write_result;
     char* messageToWrite = new char[answer.size()];
@@ -269,7 +275,7 @@ void ReceiveMessegeAndSendToRoom(thread_data_t *th_data) {
     string MessageLength(length);
     //Tworzenie łańcucha znaków z odpowiedzią do klientów
     string answer = "messU" + NickZeroAdd(th_data) + th_data -> user.nick + MessageLength + readMessage + "\n";
-    //cout<<"odpowiedz do klienta: "<<answer<<endl;
+    cout<<"Response to client: "<<answer<<endl;
     int write_result;
     char* messageToWrite = new char[answer.size()];
     int answerLength = answer.size();
@@ -585,12 +591,23 @@ void *ThreadBehavior(void *t_data){
             //--------OPCJA aRoom Wysłanie wiadomości do innych klientów odnoście stworzenia nowego pokoju na wolnym slocie
             else if(strcmp( mode, "aRoom") == 0){
         
-                NewRoomAdded(th_data);
+                AddOrDeleteRoom(th_data, "add");
                 if(th_data->errorHandling == true) {
                     break; //jeżeli wystąpił jakiś błąd podczas write
                 }
                 ThrowingRubbish(th_data);
             }
+
+            //--------OPCJA dRoom Wysłanie wiadomości do innych klientów odnoście usunięcia pokoju
+            else if(strcmp( mode, "dRoom") == 0){
+        
+                AddOrDeleteRoom(th_data, "delete");
+                if(th_data->errorHandling == true) {
+                    break; //jeżeli wystąpił jakiś błąd podczas write
+                }
+                ThrowingRubbish(th_data);
+            }
+
 
             //-------Opcja mSend Przesłanie wiadomości dalej do pokoju w którym znajduje się użytkownik, który napisał wiadomość
             else if(strcmp( mode, "mSend") == 0){
