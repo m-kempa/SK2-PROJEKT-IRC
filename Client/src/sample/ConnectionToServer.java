@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.lang.reflect.InvocationTargetException;
 import java.net.*;
+import java.text.Normalizer;
 
 //Ta klasa obsługuję komunikację między kliente i serwerem
 public class ConnectionToServer {
@@ -100,9 +101,17 @@ public class ConnectionToServer {
     //Klient za pomocą tej metody wysyła informację o nadaniu nazwy nowemu pokojowi
     public void roomAdd(String roomName) throws IOException {
         PrintWriter writer = new PrintWriter(userSocket.getOutputStream(), true);
-        writer.println(roomName);
+        writer.println(stringUtils(roomName));
         //System.out.println(roomName);
     }
+
+    //Klient za pomocą tej metody wysyła informację usunięciu pokoju
+    public void roomDel(String roomName) throws IOException {
+        PrintWriter writer = new PrintWriter(userSocket.getOutputStream(), true);
+        writer.println(stringUtils(roomName));
+        //System.out.println(roomName);
+    }
+
 
     //Klient za pomocą tej metody wysyła informację o zmianie pokoju na inny
     public void roomChange(String roomNumber) throws IOException {
@@ -115,7 +124,7 @@ public class ConnectionToServer {
 
         PrintWriter writer = new PrintWriter(userSocket.getOutputStream(), true);
         String length = MessageZeroAdd(message);
-        writer.println("mSend" + length + message);
+        writer.println("mSend" + length + stringUtils(message));
     }
 
 
@@ -136,6 +145,7 @@ public class ConnectionToServer {
         String userJoinToRoom  = "roomJ";
         String userLeaveRoom = "roomL";
         String userAddRoom = "roomA";
+        String userDeleteRoom = "roomD";
 
         try {
             //zaporzyczone z szblonu z zajęc
@@ -181,6 +191,21 @@ public class ConnectionToServer {
                 }
                 serverMessage = userAddRoom + serverMessage.substring(0, 3) + message;
 
+            }
+
+            //Opcja roomD oznacza usuniecie pokoju przez użytkownika z wolnego slotu
+            else if (userDeleteRoom.equals(serverMessage.substring(0,5))) {
+                serverMessage = serverMessage.substring(5, serverMessage.length());
+                roomNumber = serverMessage.substring(0,1);
+                NewRoomLen = serverMessage.substring(1, 3);
+                NewRoomLen = NewRoomLen.replaceAll("^0*", "");
+                message = serverMessage.substring(3, serverMessage.length());
+
+                //Czytamy tak długo aż zapisze całą wiadomość o wcześniej pobranej długości
+                while (message.length() < Integer.parseInt(NewRoomLen)) {
+                    message = message + reader.readLine();
+                }
+                serverMessage = userDeleteRoom + serverMessage.substring(0, 3) + message;
 
             }
 
@@ -232,6 +257,16 @@ public class ConnectionToServer {
             ;
         }
     }
+
+    //Metoda normalizująca wiadomość (usunięcie znaków diakrytycznych które psują wysyłany do serwera bufor)
+    private String stringUtils(String src) {
+        return Normalizer
+                .normalize(src, Normalizer.Form.NFD)
+                .replace("ł","l")
+                .replace("Ł","L")
+                .replaceAll("[^\\p{ASCII}]", "");
+    }
+
 
     // metoda służąca uzupełnieniu długości Wiadomości
     // dozwolona długość wiadomości od 1-999
